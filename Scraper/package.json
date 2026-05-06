@@ -1,0 +1,13 @@
+{
+  "name": "recipe-scraper",
+  "version": "1.0.0",
+  "description": "Simple recipe scraper using cheerio",
+  "main": "scraper.js",
+  "scripts": {
+    "start": "node scraper.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.2",
+    "cheerio": "^1.0.0-rc.12"
+  }
+}
