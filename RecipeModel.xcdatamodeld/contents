@@ -1,2 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<model documentVersion="1.0" lastSavedToolsVersion="2289" systemVersion="22.0" type="xcdatamodel" userDefinedModelVersionIdentifier="" versionIdentifiers="{}"/>
+<model documentVersion="1.0" lastSavedToolsVersion="2289" systemVersion="22.0" type="xcdatamodel" userDefinedModelVersionIdentifier="" versionIdentifiers="{}">
+    <entity name="Recipe" representedClassName="Recipe" syncable="YES">
+        <attribute name="id" attributeType="UUID" optional="NO"/>
+        <attribute name="title" attributeType="String" optional="NO"/>
+        <attribute name="cuisine" attributeType="String" optional="NO"/>
+        <attribute name="proteinType" attributeType="String" optional="NO"/>
+        <attribute name="carbType" attributeType="String" optional="NO"/>
+        <attribute name="caloriesPerServing" attributeType="Double" optional="NO"/>
+        <attribute name="isDessert" attributeType="Boolean" optional="NO"/>
+        <attribute name="servings" attributeType="Integer16" optional="NO"/>
+        <attribute name="imagePath" attributeType="String" optional="YES"/>
+        <attribute name="sourceURL" attributeType="String" optional="YES"/>
+        <attribute name="steps" attributeType="Transformable" optional="YES"/>
+        <relationship name="ingredients" destinationEntity="Ingredient" toMany="YES" deletionRule="Cascade" optional="NO"/>
+    </entity>
+    <entity name="Ingredient" representedClassName="Ingredient" syncable="YES">
+        <attribute name="name" attributeType="String" optional="NO"/>
+        <attribute name="amount" attributeType="Double" optional="NO"/>
+        <attribute name="unit" attributeType="String" optional="NO"/>
+        <relationship name="recipe" destinationEntity="Recipe" toMany="NO" inverseName="ingredients" deletionRule="Nullify" optional="NO"/>
+        <relationship name="nutrition" destinationEntity="NutritionInfo" toMany="NO" deletionRule="Nullify" optional="YES"/>
+    </entity>
+    <entity name="NutritionInfo" representedClassName="NutritionInfo" syncable="YES">
+        <attribute name="calories" attributeType="Double" optional="NO"/>
+        <attribute name="protein" attributeType="Double" optional="NO"/>
+        <attribute name="carbs" attributeType="Double" optional="NO"/>
+        <attribute name="fat" attributeType="Double" optional="NO"/>
+    </entity>
+</model>
