@@ -9,6 +9,7 @@ import SwiftData
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Recipe.title) private var recipes: [Recipe]
+    @State private var isShowingAddRecipe = false
 
     var body: some View {
         NavigationSplitView {
@@ -34,8 +35,10 @@ struct ContentView: View {
                     EditButton()
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: addDemoRecipe) {
-                        Label("Add Demo Recipe", systemImage: "plus")
+                    Button {
+                        isShowingAddRecipe = true
+                    } label: {
+                        Label("Add Recipe", systemImage: "plus")
                     }
                 }
             }
@@ -44,11 +47,14 @@ struct ContentView: View {
                     ContentUnavailableView(
                         "No recipes yet",
                         systemImage: "fork.knife.circle",
-                        description: Text("Tap + to add a sample recipe and verify the app is working.")
+                        description: Text("Tap + to add Robin’s first recipe.")
                     )
                 }
             }
             .onAppear(perform: seedSampleDataIfNeeded)
+            .sheet(isPresented: $isShowingAddRecipe) {
+                AddRecipeView()
+            }
         } detail: {
             Text("Select a recipe")
                 .foregroundStyle(.secondary)
@@ -73,26 +79,6 @@ struct ContentView: View {
                 Ingredient(name: "Pecorino Romano", amount: 75, unit: "g")
             ],
             nutrition: NutritionInfo(calories: 540, protein: 24, carbs: 62, fat: 22)
-        )
-    }
-
-    private func addDemoRecipe() {
-        insertRecipe(
-            title: "Lemon Garlic Chicken",
-            cuisine: "American",
-            proteinType: "Chicken",
-            carbType: "Potatoes",
-            caloriesPerServing: 430,
-            isDessert: false,
-            servings: 4,
-            instructions: "Season chicken. Roast with potatoes, lemon, garlic, olive oil, and herbs until golden and cooked through.",
-            ingredients: [
-                Ingredient(name: "Chicken thighs", amount: 6, unit: "pieces"),
-                Ingredient(name: "Baby potatoes", amount: 1.5, unit: "lb"),
-                Ingredient(name: "Lemon", amount: 1, unit: ""),
-                Ingredient(name: "Garlic cloves", amount: 5, unit: "")
-            ],
-            nutrition: NutritionInfo(calories: 430, protein: 36, carbs: 32, fat: 18)
         )
     }
 
