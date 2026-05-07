@@ -12,7 +12,10 @@ import SwiftData
 struct Robin_s_RecipeezApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            Recipe.self,
+            Ingredient.self,
+            NutritionInfo.self,
+            Item.self, // kept so existing simulator installs can migrate cleanly
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
