@@ -45,7 +45,7 @@ struct ContentView: View {
                                 }
                             }
 
-                            Text("Build marker: Italian Trattoria Theme v1")
+                            Text("Build marker: Rustic Italian Table Theme v1")
                                 .font(.caption)
                                 .foregroundStyle(RecipeTheme.cocoa.opacity(0.55))
                                 .frame(maxWidth: .infinity, alignment: .center)
