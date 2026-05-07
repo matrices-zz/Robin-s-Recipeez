@@ -292,19 +292,11 @@ private struct RecipeDetailScreen: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 VStack(alignment: .leading, spacing: 12) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text(recipe.isDessert ? "Sweet Treat" : "Kitchen Favorite")
-                            .font(.caption.bold())
-                            .textCase(.uppercase)
-                            .tracking(1.2)
-                            .foregroundStyle(RecipeTheme.tomato)
-                        Spacer()
-                        if recipe.isFavorite {
-                            Label("Favorite", systemImage: "heart.fill")
-                                .font(.caption.bold())
-                                .foregroundStyle(RecipeTheme.tomato)
-                        }
-                    }
+                    Text(recipe.isDessert ? "Sweet Treat" : "Kitchen Favorite")
+                        .font(.caption.bold())
+                        .textCase(.uppercase)
+                        .tracking(1.2)
+                        .foregroundStyle(RecipeTheme.tomato)
 
                     Text(recipe.title)
                         .font(.system(.largeTitle, design: .serif).weight(.bold))
