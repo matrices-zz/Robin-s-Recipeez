@@ -7,27 +7,30 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
     @Query(sort: \Recipe.title) private var recipes: [Recipe]
     @State private var isShowingAddRecipe = false
 
     var body: some View {
         NavigationSplitView {
             List {
-                ForEach(recipes) { recipe in
-                    NavigationLink {
-                        RecipeDetailScreen(recipe: recipe)
-                    } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(recipe.title)
-                                .font(.headline)
-                            Text("\(recipe.cuisine) • \(recipe.servings) servings • \(Int(recipe.caloriesPerServing)) cal/serving")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                Section {
+                    ForEach(recipes) { recipe in
+                        NavigationLink {
+                            RecipeDetailScreen(recipe: recipe)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(recipe.title)
+                                    .font(.headline)
+                                Text("\(displayText(recipe.cuisine, fallback: "Cuisine")) • \(recipe.servings) servings • \(Int(recipe.caloriesPerServing)) cal/serving")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
+                    .onDelete(perform: deleteRecipes)
+                } footer: {
+                    Text("Build marker: Add Recipe Form v2 — no automatic sample recipes")
                 }
-                .onDelete(perform: deleteRecipes)
             }
             .navigationTitle("Robin’s Recipeez")
             .toolbar {
@@ -51,7 +54,6 @@ struct ContentView: View {
                     )
                 }
             }
-            .onAppear(perform: seedSampleDataIfNeeded)
             .sheet(isPresented: $isShowingAddRecipe) {
                 AddRecipeView()
             }
@@ -61,63 +63,15 @@ struct ContentView: View {
         }
     }
 
-    private func seedSampleDataIfNeeded() {
-        guard recipes.isEmpty else { return }
-        insertRecipe(
-            title: "Spaghetti Carbonara",
-            cuisine: "Italian",
-            proteinType: "Pancetta",
-            carbType: "Pasta",
-            caloriesPerServing: 540,
-            isDessert: false,
-            servings: 4,
-            instructions: "Boil spaghetti until al dente. Render pancetta. Toss pasta with eggs, cheese, pepper, and pancetta off heat until glossy.",
-            ingredients: [
-                Ingredient(name: "Spaghetti", amount: 400, unit: "g"),
-                Ingredient(name: "Pancetta", amount: 150, unit: "g"),
-                Ingredient(name: "Egg yolks", amount: 4, unit: ""),
-                Ingredient(name: "Pecorino Romano", amount: 75, unit: "g")
-            ],
-            nutrition: NutritionInfo(calories: 540, protein: 24, carbs: 62, fat: 22)
-        )
-    }
-
-    private func insertRecipe(
-        title: String,
-        cuisine: String,
-        proteinType: String,
-        carbType: String,
-        caloriesPerServing: Double,
-        isDessert: Bool,
-        servings: Int,
-        instructions: String,
-        ingredients: [Ingredient],
-        nutrition: NutritionInfo
-    ) {
-        withAnimation {
-            let recipe = Recipe(
-                title: title,
-                cuisine: cuisine,
-                proteinType: proteinType,
-                carbType: carbType,
-                caloriesPerServing: caloriesPerServing,
-                isDessert: isDessert,
-                servings: servings,
-                instructions: instructions,
-                ingredients: ingredients,
-                nutrition: nutrition
-            )
-            modelContext.insert(recipe)
-        }
-    }
-
     private func deleteRecipes(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(recipes[index])
-            }
+        // In sorted @Query order, this deletes the visible rows the user swiped.
+        for index in offsets {
+            modelContext.delete(recipes[index])
         }
+        try? modelContext.save()
     }
+
+    @Environment(\.modelContext) private var modelContext
 }
 
 private struct RecipeDetailScreen: View {
@@ -129,7 +83,7 @@ private struct RecipeDetailScreen: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(recipe.title)
                         .font(.largeTitle.bold())
-                    Text("\(recipe.cuisine) • \(recipe.proteinType) • \(recipe.carbType)")
+                    Text("\(displayText(recipe.cuisine, fallback: "Cuisine")) • \(displayText(recipe.proteinType, fallback: "Protein")) • \(displayText(recipe.carbType, fallback: "Carb/side"))")
                         .font(.headline)
                         .foregroundStyle(.secondary)
                 }
@@ -181,6 +135,11 @@ private struct SectionBlock<Content: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
+}
+
+private func displayText(_ value: String, fallback: String) -> String {
+    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    return trimmed.isEmpty ? fallback : trimmed
 }
 
 #Preview {
