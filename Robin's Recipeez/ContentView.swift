@@ -44,7 +44,8 @@ struct ContentView: View {
                             deleteRecipe: deleteRecipe,
                             addRecipe: { isShowingAddRecipe = true }
                         )
-                        .frame(width: sidebarWidth, maxHeight: .infinity)
+                        .frame(width: sidebarWidth)
+                        .frame(maxHeight: .infinity)
 
                         detailContent
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
