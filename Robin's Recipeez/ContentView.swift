@@ -74,7 +74,7 @@ struct ContentView: View {
                 ItalianPatternBackground()
                     .ignoresSafeArea()
                 VStack(spacing: 14) {
-                    TomatoCluster()
+                    ItalianHeroArt()
                         .frame(width: 128, height: 104)
                     Text("Pick a recipe")
                         .font(.title2.bold())
@@ -109,7 +109,7 @@ private struct CookbookHeader: View {
                         .foregroundStyle(RecipeTheme.cocoa)
                 }
                 Spacer()
-                TomatoCluster()
+                ItalianHeroArt()
                     .frame(width: 92, height: 72)
             }
 
@@ -196,7 +196,7 @@ private struct EmptyCookbookView: View {
                 Circle()
                     .fill(RecipeTheme.butter.opacity(0.55))
                     .frame(width: 140, height: 140)
-                TomatoCluster()
+                ItalianHeroArt()
                     .frame(width: 116, height: 94)
             }
 
@@ -246,7 +246,7 @@ private struct RecipeDetailScreen: View {
                                 .tracking(1.2)
                                 .foregroundStyle(RecipeTheme.tomato)
                             Spacer()
-                            TomatoCluster()
+                            ItalianHeroArt()
                                 .frame(width: 66, height: 50)
                         }
 

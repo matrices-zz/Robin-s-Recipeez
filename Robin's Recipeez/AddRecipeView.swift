@@ -42,7 +42,7 @@ struct AddRecipeView: View {
                                     .foregroundStyle(RecipeTheme.cocoa)
                             }
                             Spacer()
-                            TomatoCluster()
+                            ItalianHeroArt()
                                 .frame(width: 82, height: 64)
                         }
                         .padding(.horizontal, 4)
