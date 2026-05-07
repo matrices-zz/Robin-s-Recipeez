@@ -9,88 +9,135 @@ import SwiftData
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Recipe.title) private var recipes: [Recipe]
+    @State private var selectedRecipe: Recipe?
     @State private var isShowingAddRecipe = false
 
     var body: some View {
-        NavigationSplitView {
-            ZStack {
-                ItalianPatternBackground()
-                    .ignoresSafeArea()
+        ZStack {
+            ItalianPatternBackground()
+                .ignoresSafeArea()
 
-                if recipes.isEmpty {
-                    EmptyCookbookView {
-                        isShowingAddRecipe = true
-                    }
-                    .padding(28)
-                } else {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 18) {
-                            CookbookHeader(recipeCount: recipes.count)
-
-                            LazyVStack(spacing: 14) {
-                                ForEach(recipes) { recipe in
-                                    NavigationLink {
-                                        RecipeDetailScreen(recipe: recipe)
-                                    } label: {
-                                        RecipeCard(recipe: recipe)
-                                    }
-                                    .buttonStyle(.plain)
-                                    .contextMenu {
-                                        Button(role: .destructive) {
-                                            deleteRecipe(recipe)
-                                        } label: {
-                                            Label("Delete Recipe", systemImage: "trash")
-                                        }
-                                    }
-                                }
-                            }
-
-                            Text("Build marker: Rustic Italian Table Theme v1")
-                                .font(.caption)
-                                .foregroundStyle(RecipeTheme.cocoa.opacity(0.55))
-                                .frame(maxWidth: .infinity, alignment: .center)
-                                .padding(.top, 6)
+            NavigationSplitView {
+                CookbookSidebar(
+                    recipes: recipes,
+                    selectedRecipe: selectedRecipe,
+                    selectRecipe: { selectedRecipe = $0 },
+                    deleteRecipe: deleteRecipe,
+                    addRecipe: { isShowingAddRecipe = true }
+                )
+                .navigationTitle("Robin’s Recipeez")
+                .navigationSplitViewColumnWidth(min: 340, ideal: 380, max: 430)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button {
+                            isShowingAddRecipe = true
+                        } label: {
+                            Label("Add Recipe", systemImage: "plus")
                         }
-                        .padding(20)
+                        .tint(RecipeTheme.tomato)
+                    }
+                }
+            } detail: {
+                Group {
+                    if let selectedRecipe {
+                        RecipeDetailScreen(recipe: selectedRecipe)
+                    } else {
+                        PickRecipeView()
                     }
                 }
             }
-            .navigationTitle("Robin’s Recipeez")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        isShowingAddRecipe = true
-                    } label: {
-                        Label("Add Recipe", systemImage: "plus")
-                    }
-                    .tint(RecipeTheme.tomato)
-                }
-            }
-            .sheet(isPresented: $isShowingAddRecipe) {
-                AddRecipeView()
-            }
-        } detail: {
-            ZStack {
-                ItalianPatternBackground()
-                    .ignoresSafeArea()
-                VStack(spacing: 14) {
-                    ItalianHeroArt()
-                        .frame(width: 128, height: 104)
-                    Text("Pick a recipe")
-                        .font(.title2.bold())
-                        .foregroundStyle(RecipeTheme.ink)
-                    Text("Tomatoes, basil, family notes — the good stuff opens here.")
-                        .foregroundStyle(RecipeTheme.cocoa)
-                }
-            }
+            .navigationSplitViewStyle(.balanced)
+            .background(Color.clear)
+        }
+        .sheet(isPresented: $isShowingAddRecipe) {
+            AddRecipeView()
         }
     }
 
     private func deleteRecipe(_ recipe: Recipe) {
         withAnimation {
+            if selectedRecipe?.persistentModelID == recipe.persistentModelID {
+                selectedRecipe = nil
+            }
             modelContext.delete(recipe)
             try? modelContext.save()
         }
+    }
+}
+
+private struct CookbookSidebar: View {
+    let recipes: [Recipe]
+    let selectedRecipe: Recipe?
+    let selectRecipe: (Recipe) -> Void
+    let deleteRecipe: (Recipe) -> Void
+    let addRecipe: () -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                if recipes.isEmpty {
+                    EmptyCookbookView(addRecipe: addRecipe)
+                        .padding(.top, 12)
+                } else {
+                    CookbookHeader(recipeCount: recipes.count)
+
+                    LazyVStack(spacing: 12) {
+                        ForEach(recipes) { recipe in
+                            Button {
+                                selectRecipe(recipe)
+                            } label: {
+                                RecipeCard(
+                                    recipe: recipe,
+                                    isSelected: selectedRecipe?.persistentModelID == recipe.persistentModelID
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .contextMenu {
+                                Button(role: .destructive) {
+                                    deleteRecipe(recipe)
+                                } label: {
+                                    Label("Delete Recipe", systemImage: "trash")
+                                }
+                            }
+                        }
+                    }
+
+                    Text("Build marker: Layout Repair v1")
+                        .font(.caption)
+                        .foregroundStyle(RecipeTheme.cocoa.opacity(0.65))
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.top, 6)
+                }
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 16)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+        }
+        .scrollContentBackground(.hidden)
+        .background(RecipeTheme.cream.opacity(0.30))
+    }
+}
+
+private struct PickRecipeView: View {
+    var body: some View {
+        VStack(spacing: 14) {
+            ItalianHeroArt()
+                .frame(width: 110, height: 88)
+            Text("Pick a recipe")
+                .font(.title2.bold())
+                .foregroundStyle(RecipeTheme.ink)
+            Text("Tomatoes, basil, family notes — the good stuff opens here.")
+                .font(.body)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(RecipeTheme.cocoa)
+        }
+        .padding(28)
+        .frame(maxWidth: 420)
+        .background(RecipeTheme.card)
+        .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
+        .shadow(color: RecipeTheme.cocoa.opacity(0.14), radius: 18, x: 0, y: 8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.clear)
     }
 }
 
@@ -98,92 +145,102 @@ private struct CookbookHeader: View {
     let recipeCount: Int
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Robin’s Recipeez")
-                        .font(.system(.largeTitle, design: .serif).weight(.bold))
-                        .foregroundStyle(RecipeTheme.ink)
-                    Text("Family Italian flavor, weeknight keepers, and the dishes worth writing down.")
-                        .font(.subheadline)
-                        .foregroundStyle(RecipeTheme.cocoa)
-                }
-                Spacer()
-                ItalianHeroArt()
-                    .frame(width: 92, height: 72)
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 5) {
+                Text("Robin’s Recipeez")
+                    .font(.system(.title, design: .serif).weight(.bold))
+                    .foregroundStyle(RecipeTheme.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.78)
+
+                Text("Family Italian flavor, weeknight keepers, and the dishes worth writing down.")
+                    .font(.subheadline)
+                    .foregroundStyle(RecipeTheme.cocoa)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             VineDivider()
 
-            HStack(spacing: 10) {
-                StatPill(icon: "book.pages", text: "\(recipeCount) saved")
-                StatPill(icon: "leaf.fill", text: "trattoria style")
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 10) {
+                    StatPill(icon: "book.pages", text: "\(recipeCount) saved")
+                    StatPill(icon: "leaf.fill", text: "trattoria style")
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    StatPill(icon: "book.pages", text: "\(recipeCount) saved")
+                    StatPill(icon: "leaf.fill", text: "trattoria style")
+                }
             }
         }
         .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(RecipeTheme.card)
-        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
         .shadow(color: RecipeTheme.cocoa.opacity(0.14), radius: 16, x: 0, y: 8)
     }
 }
 
 private struct RecipeCard: View {
     let recipe: Recipe
+    let isSelected: Bool
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(alignment: .top, spacing: 12) {
             ZStack {
                 Circle()
                     .fill(recipe.isDessert ? RecipeTheme.butter.opacity(0.85) : RecipeTheme.sage.opacity(0.85))
                 Image(systemName: recipe.isDessert ? "birthday.cake.fill" : "fork.knife")
-                    .font(.title2)
+                    .font(.headline)
                     .foregroundStyle(.white)
             }
-            .frame(width: 58, height: 58)
+            .frame(width: 44, height: 44)
+            .padding(.top, 2)
 
             VStack(alignment: .leading, spacing: 7) {
                 Text(recipe.title)
-                    .font(.title3.bold())
+                    .font(.headline.weight(.bold))
                     .foregroundStyle(RecipeTheme.ink)
                     .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text(summaryLine(for: recipe))
                     .font(.subheadline)
                     .foregroundStyle(RecipeTheme.cocoa)
                     .lineLimit(1)
+                    .truncationMode(.tail)
 
-                HStack(spacing: 8) {
-                    MiniTag(icon: "person.2", text: "\(recipe.servings)")
-                    if recipe.caloriesPerServing > 0 {
-                        MiniTag(icon: "flame", text: "\(Int(recipe.caloriesPerServing)) cal")
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 7) {
+                        MiniTag(icon: "person.2", text: "\(recipe.servings)")
+                        if recipe.caloriesPerServing > 0 {
+                            MiniTag(icon: "flame", text: "\(Int(recipe.caloriesPerServing)) cal")
+                        }
+                        MiniTag(icon: "list.bullet", text: "\(recipe.ingredients.count) ingredients")
                     }
-                    MiniTag(icon: "list.bullet", text: "\(recipe.ingredients.count) ingredients")
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 7) {
+                            MiniTag(icon: "person.2", text: "\(recipe.servings)")
+                            if recipe.caloriesPerServing > 0 {
+                                MiniTag(icon: "flame", text: "\(Int(recipe.caloriesPerServing)) cal")
+                            }
+                        }
+                        MiniTag(icon: "list.bullet", text: "\(recipe.ingredients.count) ingredients")
+                    }
                 }
             }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .foregroundStyle(RecipeTheme.tomato.opacity(0.75))
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(16)
-        .background(RecipeTheme.card)
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay(alignment: .topTrailing) {
-            HStack(spacing: 3) {
-                Image(systemName: "leaf.fill")
-                    .foregroundStyle(RecipeTheme.basil)
-                Image(systemName: "circle.fill")
-                    .font(.system(size: 7))
-                    .foregroundStyle(RecipeTheme.tomato)
-            }
-            .padding(14)
-        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(isSelected ? RecipeTheme.cream.opacity(0.96) : RecipeTheme.card)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(RecipeTheme.basil.opacity(0.18), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(isSelected ? RecipeTheme.tomato.opacity(0.45) : RecipeTheme.basil.opacity(0.16), lineWidth: isSelected ? 2 : 1)
         )
-        .shadow(color: RecipeTheme.cocoa.opacity(0.12), radius: 12, x: 0, y: 6)
+        .shadow(color: RecipeTheme.cocoa.opacity(0.11), radius: 10, x: 0, y: 5)
     }
 }
 
@@ -232,80 +289,95 @@ private struct RecipeDetailScreen: View {
     let recipe: Recipe
 
     var body: some View {
-        ZStack {
-            ItalianPatternBackground()
-                .ignoresSafeArea()
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text(recipe.isDessert ? "Sweet Treat" : "Kitchen Favorite")
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(recipe.isDessert ? "Sweet Treat" : "Kitchen Favorite")
+                            .font(.caption.bold())
+                            .textCase(.uppercase)
+                            .tracking(1.2)
+                            .foregroundStyle(RecipeTheme.tomato)
+                        Spacer()
+                        if recipe.isFavorite {
+                            Label("Favorite", systemImage: "heart.fill")
                                 .font(.caption.bold())
-                                .textCase(.uppercase)
-                                .tracking(1.2)
                                 .foregroundStyle(RecipeTheme.tomato)
-                            Spacer()
-                            ItalianHeroArt()
-                                .frame(width: 66, height: 50)
                         }
-
-                        Text(recipe.title)
-                            .font(.system(.largeTitle, design: .serif).weight(.bold))
-                            .foregroundStyle(RecipeTheme.ink)
-
-                        Text(summaryLine(for: recipe))
-                            .font(.headline)
-                            .foregroundStyle(RecipeTheme.cocoa)
                     }
-                    .padding(22)
-                    .background(RecipeTheme.card)
-                    .overlay(alignment: .bottom) {
-                        VineDivider()
-                            .padding(.horizontal, 18)
-                            .offset(y: -10)
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
 
+                    Text(recipe.title)
+                        .font(.system(.largeTitle, design: .serif).weight(.bold))
+                        .foregroundStyle(RecipeTheme.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text(summaryLine(for: recipe))
+                        .font(.headline)
+                        .foregroundStyle(RecipeTheme.cocoa)
+                }
+                .padding(22)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(RecipeTheme.card)
+                .overlay(alignment: .bottom) {
+                    VineDivider()
+                        .padding(.horizontal, 18)
+                        .offset(y: -10)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
+
+                ViewThatFits(in: .horizontal) {
                     HStack(spacing: 10) {
                         InfoTile(icon: "person.2.fill", title: "Serves", value: "\(recipe.servings)")
                         InfoTile(icon: "flame.fill", title: "Calories", value: recipe.caloriesPerServing > 0 ? "\(Int(recipe.caloriesPerServing))" : "—")
                         InfoTile(icon: "list.bullet.clipboard.fill", title: "Items", value: "\(recipe.ingredients.count)")
                     }
 
-                    if !recipe.ingredients.isEmpty {
-                        DetailBlock(title: "Ingredients", icon: "basket.fill") {
-                            ForEach(recipe.ingredients) { ingredient in
-                                HStack(alignment: .firstTextBaseline) {
-                                    Text("•")
-                                        .foregroundStyle(RecipeTheme.tomato)
-                                    Text("\(ingredient.amount.formatted()) \(ingredient.unit) \(ingredient.name)")
-                                        .foregroundStyle(RecipeTheme.ink)
-                                }
-                            }
-                        }
+                    VStack(spacing: 10) {
+                        InfoTile(icon: "person.2.fill", title: "Serves", value: "\(recipe.servings)")
+                        InfoTile(icon: "flame.fill", title: "Calories", value: recipe.caloriesPerServing > 0 ? "\(Int(recipe.caloriesPerServing))" : "—")
+                        InfoTile(icon: "list.bullet.clipboard.fill", title: "Items", value: "\(recipe.ingredients.count)")
                     }
+                }
 
-                    DetailBlock(title: "Instructions", icon: "text.book.closed.fill") {
-                        Text(recipe.instructions)
-                            .foregroundStyle(RecipeTheme.ink)
-                            .lineSpacing(5)
-                    }
-
-                    if let nutrition = recipe.nutrition {
-                        DetailBlock(title: "Nutrition", icon: "chart.bar.fill") {
-                            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                                NutritionBadge(title: "Calories", value: "\(Int(nutrition.calories))")
-                                NutritionBadge(title: "Protein", value: "\(Int(nutrition.protein))g")
-                                NutritionBadge(title: "Carbs", value: "\(Int(nutrition.carbs))g")
-                                NutritionBadge(title: "Fat", value: "\(Int(nutrition.fat))g")
+                if !recipe.ingredients.isEmpty {
+                    DetailBlock(title: "Ingredients", icon: "basket.fill") {
+                        ForEach(recipe.ingredients) { ingredient in
+                            HStack(alignment: .firstTextBaseline) {
+                                Text("•")
+                                    .foregroundStyle(RecipeTheme.tomato)
+                                Text("\(ingredient.amount.formatted()) \(ingredient.unit) \(ingredient.name)")
+                                    .foregroundStyle(RecipeTheme.ink)
+                                    .fixedSize(horizontal: false, vertical: true)
                             }
                         }
                     }
                 }
-                .padding(20)
+
+                DetailBlock(title: "Instructions", icon: "text.book.closed.fill") {
+                    Text(recipe.instructions)
+                        .foregroundStyle(RecipeTheme.ink)
+                        .lineSpacing(5)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                if let nutrition = recipe.nutrition {
+                    DetailBlock(title: "Nutrition", icon: "chart.bar.fill") {
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                            NutritionBadge(title: "Calories", value: "\(Int(nutrition.calories))")
+                            NutritionBadge(title: "Protein", value: "\(Int(nutrition.protein))g")
+                            NutritionBadge(title: "Carbs", value: "\(Int(nutrition.carbs))g")
+                            NutritionBadge(title: "Fat", value: "\(Int(nutrition.fat))g")
+                        }
+                    }
+                }
             }
+            .padding(.horizontal, 26)
+            .padding(.vertical, 22)
+            .frame(maxWidth: 820, alignment: .topLeading)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
         }
+        .scrollContentBackground(.hidden)
+        .background(RecipeTheme.cream.opacity(0.20))
         .navigationTitle(recipe.title)
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -376,6 +448,7 @@ private struct MiniTag: View {
     var body: some View {
         Label(text, systemImage: icon)
             .font(.caption)
+            .lineLimit(1)
             .padding(.horizontal, 8)
             .padding(.vertical, 5)
             .background(RecipeTheme.cream)
