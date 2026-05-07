@@ -28,17 +28,22 @@ struct AddRecipeView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                RecipeTheme.backgroundGradient
+                ItalianPatternBackground()
                     .ignoresSafeArea()
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("New Recipe")
-                                .font(.system(.largeTitle, design: .serif).weight(.bold))
-                                .foregroundStyle(RecipeTheme.ink)
-                            Text("Capture the dish, the details, and the little notes that make it Robin’s.")
-                                .foregroundStyle(RecipeTheme.cocoa)
+                        HStack(alignment: .center, spacing: 14) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("New Recipe")
+                                    .font(.system(.largeTitle, design: .serif).weight(.bold))
+                                    .foregroundStyle(RecipeTheme.ink)
+                                Text("Capture the dish, the details, and the little notes that make it Robin’s.")
+                                    .foregroundStyle(RecipeTheme.cocoa)
+                            }
+                            Spacer()
+                            TomatoCluster()
+                                .frame(width: 82, height: 64)
                         }
                         .padding(.horizontal, 4)
 
@@ -157,9 +162,16 @@ private struct FormCard<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Label(title, systemImage: icon)
-                .font(.title3.bold())
-                .foregroundStyle(RecipeTheme.ink)
+            HStack {
+                Label(title, systemImage: icon)
+                    .font(.title3.bold())
+                    .foregroundStyle(RecipeTheme.ink)
+                Spacer()
+                Image(systemName: "leaf.fill")
+                    .foregroundStyle(RecipeTheme.basil)
+            }
+
+            VineDivider()
 
             VStack(spacing: 12) {
                 content

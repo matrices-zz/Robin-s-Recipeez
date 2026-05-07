@@ -14,7 +14,7 @@ struct ContentView: View {
     var body: some View {
         NavigationSplitView {
             ZStack {
-                RecipeTheme.backgroundGradient
+                ItalianPatternBackground()
                     .ignoresSafeArea()
 
                 if recipes.isEmpty {
@@ -45,7 +45,7 @@ struct ContentView: View {
                                 }
                             }
 
-                            Text("Build marker: Warm Cookbook Theme v1")
+                            Text("Build marker: Italian Trattoria Theme v1")
                                 .font(.caption)
                                 .foregroundStyle(RecipeTheme.cocoa.opacity(0.55))
                                 .frame(maxWidth: .infinity, alignment: .center)
@@ -71,16 +71,15 @@ struct ContentView: View {
             }
         } detail: {
             ZStack {
-                RecipeTheme.backgroundGradient
+                ItalianPatternBackground()
                     .ignoresSafeArea()
                 VStack(spacing: 14) {
-                    Image(systemName: "book.closed.fill")
-                        .font(.system(size: 54))
-                        .foregroundStyle(RecipeTheme.tomato)
+                    TomatoCluster()
+                        .frame(width: 128, height: 104)
                     Text("Pick a recipe")
                         .font(.title2.bold())
                         .foregroundStyle(RecipeTheme.ink)
-                    Text("Robin’s cookbook details will open here.")
+                    Text("Tomatoes, basil, family notes — the good stuff opens here.")
                         .foregroundStyle(RecipeTheme.cocoa)
                 }
             }
@@ -105,19 +104,20 @@ private struct CookbookHeader: View {
                     Text("Robin’s Recipeez")
                         .font(.system(.largeTitle, design: .serif).weight(.bold))
                         .foregroundStyle(RecipeTheme.ink)
-                    Text("A cozy little cookbook for the meals worth keeping.")
+                    Text("Family Italian flavor, weeknight keepers, and the dishes worth writing down.")
                         .font(.subheadline)
                         .foregroundStyle(RecipeTheme.cocoa)
                 }
                 Spacer()
-                Image(systemName: "fork.knife.circle.fill")
-                    .font(.system(size: 44))
-                    .foregroundStyle(RecipeTheme.tomato)
+                TomatoCluster()
+                    .frame(width: 92, height: 72)
             }
+
+            VineDivider()
 
             HStack(spacing: 10) {
                 StatPill(icon: "book.pages", text: "\(recipeCount) saved")
-                StatPill(icon: "heart.fill", text: "family favorites")
+                StatPill(icon: "leaf.fill", text: "trattoria style")
             }
         }
         .padding(18)
@@ -135,7 +135,7 @@ private struct RecipeCard: View {
             ZStack {
                 Circle()
                     .fill(recipe.isDessert ? RecipeTheme.butter.opacity(0.85) : RecipeTheme.sage.opacity(0.85))
-                Image(systemName: recipe.isDessert ? "birthday.cake.fill" : "takeoutbag.and.cup.and.straw.fill")
+                Image(systemName: recipe.isDessert ? "birthday.cake.fill" : "fork.knife")
                     .font(.title2)
                     .foregroundStyle(.white)
             }
@@ -169,9 +169,19 @@ private struct RecipeCard: View {
         .padding(16)
         .background(RecipeTheme.card)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(alignment: .topTrailing) {
+            HStack(spacing: 3) {
+                Image(systemName: "leaf.fill")
+                    .foregroundStyle(RecipeTheme.basil)
+                Image(systemName: "circle.fill")
+                    .font(.system(size: 7))
+                    .foregroundStyle(RecipeTheme.tomato)
+            }
+            .padding(14)
+        }
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(.white.opacity(0.7), lineWidth: 1)
+                .stroke(RecipeTheme.basil.opacity(0.18), lineWidth: 1)
         )
         .shadow(color: RecipeTheme.cocoa.opacity(0.12), radius: 12, x: 0, y: 6)
     }
@@ -186,9 +196,8 @@ private struct EmptyCookbookView: View {
                 Circle()
                     .fill(RecipeTheme.butter.opacity(0.55))
                     .frame(width: 140, height: 140)
-                Image(systemName: "fork.knife.circle.fill")
-                    .font(.system(size: 72))
-                    .foregroundStyle(RecipeTheme.tomato)
+                TomatoCluster()
+                    .frame(width: 116, height: 94)
             }
 
             VStack(spacing: 8) {
@@ -224,7 +233,7 @@ private struct RecipeDetailScreen: View {
 
     var body: some View {
         ZStack {
-            RecipeTheme.backgroundGradient
+            ItalianPatternBackground()
                 .ignoresSafeArea()
 
             ScrollView {
@@ -237,8 +246,8 @@ private struct RecipeDetailScreen: View {
                                 .tracking(1.2)
                                 .foregroundStyle(RecipeTheme.tomato)
                             Spacer()
-                            Image(systemName: recipe.isDessert ? "birthday.cake.fill" : "heart.fill")
-                                .foregroundStyle(RecipeTheme.tomato)
+                            TomatoCluster()
+                                .frame(width: 66, height: 50)
                         }
 
                         Text(recipe.title)
@@ -251,6 +260,11 @@ private struct RecipeDetailScreen: View {
                     }
                     .padding(22)
                     .background(RecipeTheme.card)
+                    .overlay(alignment: .bottom) {
+                        VineDivider()
+                            .padding(.horizontal, 18)
+                            .offset(y: -10)
+                    }
                     .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
 
                     HStack(spacing: 10) {
