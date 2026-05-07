@@ -16,6 +16,9 @@ struct ContentView: View {
         GeometryReader { proxy in
             let isCompact = proxy.size.width < 760
             let sidebarWidth = Swift.min(Swift.max(proxy.size.width * 0.34, 340), 430)
+            let horizontalPadding: CGFloat = isCompact ? 16 : 22
+            let verticalPadding: CGFloat = isCompact ? 14 : 18
+            let contentHeight = Swift.max(proxy.size.height - (verticalPadding * 2), 240)
 
             ZStack {
                 ItalianPatternBackground()
@@ -30,11 +33,13 @@ struct ContentView: View {
                             deleteRecipe: deleteRecipe,
                             addRecipe: { isShowingAddRecipe = true }
                         )
+                        .frame(height: Swift.max(contentHeight * 0.44, 260))
 
                         detailContent
+                            .frame(height: Swift.max(contentHeight * 0.56 - 16, 260))
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 14)
+                    .padding(.horizontal, horizontalPadding)
+                    .padding(.vertical, verticalPadding)
                 } else {
                     HStack(alignment: .top, spacing: 18) {
                         CookbookSidebar(
@@ -45,14 +50,15 @@ struct ContentView: View {
                             addRecipe: { isShowingAddRecipe = true }
                         )
                         .frame(width: sidebarWidth)
-                        .frame(maxHeight: .infinity)
+                        .frame(height: contentHeight)
 
                         detailContent
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                            .frame(maxWidth: .infinity, alignment: .topLeading)
+                            .frame(height: contentHeight)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                    .padding(.horizontal, 22)
-                    .padding(.vertical, 18)
+                    .padding(.horizontal, horizontalPadding)
+                    .padding(.vertical, verticalPadding)
                 }
             }
         }
@@ -191,7 +197,7 @@ private struct CookbookSidebar: View {
                         }
                     }
 
-                    Text("Build marker: Viewport + Header Repair v9")
+                    Text("Build marker: Explicit Viewport Repair v10")
                         .font(.caption)
                         .foregroundStyle(RecipeTheme.cocoa.opacity(0.65))
                         .frame(maxWidth: .infinity, alignment: .center)
@@ -467,10 +473,10 @@ private struct RecipeDetailScreen: View {
             .frame(maxWidth: 820, alignment: .topLeading)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .scrollContentBackground(.hidden)
         .background(RecipeTheme.cream.opacity(0.54))
         .clipShape(RoundedRectangle(cornerRadius: 34, style: .continuous))
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 
