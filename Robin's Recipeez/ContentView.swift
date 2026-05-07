@@ -48,6 +48,7 @@ struct ContentView: View {
 
                         detailContent
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                            .fixedSize(horizontal: false, vertical: false)
                     }
                     .padding(.horizontal, 22)
                     .padding(.vertical, 18)
@@ -191,7 +192,7 @@ private struct CookbookSidebar: View {
                         }
                     }
 
-                    Text("Build marker: Custom Split Wallpaper v7")
+                    Text("Build marker: Detail Scroll Repair v8")
                         .font(.caption)
                         .foregroundStyle(RecipeTheme.cocoa.opacity(0.65))
                         .frame(maxWidth: .infinity, alignment: .center)
@@ -386,7 +387,7 @@ private struct RecipeDetailScreen: View {
     let recipe: Recipe
 
     var body: some View {
-        ScrollView {
+        ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 18) {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(recipe.isDessert ? "Sweet Treat" : "Kitchen Favorite")
@@ -466,11 +467,10 @@ private struct RecipeDetailScreen: View {
             .frame(maxWidth: 820, alignment: .topLeading)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .scrollContentBackground(.hidden)
-        .background(
-            RoundedRectangle(cornerRadius: 34, style: .continuous)
-                .fill(RecipeTheme.cream.opacity(0.54))
-        )
+        .background(RecipeTheme.cream.opacity(0.54))
+        .clipShape(RoundedRectangle(cornerRadius: 34, style: .continuous))
     }
 }
 
