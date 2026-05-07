@@ -44,12 +44,12 @@ struct ContentView: View {
                             deleteRecipe: deleteRecipe,
                             addRecipe: { isShowingAddRecipe = true }
                         )
-                        .frame(width: sidebarWidth)
+                        .frame(width: sidebarWidth, maxHeight: .infinity)
 
                         detailContent
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                            .fixedSize(horizontal: false, vertical: false)
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     .padding(.horizontal, 22)
                     .padding(.vertical, 18)
                 }
@@ -169,8 +169,6 @@ private struct CookbookSidebar: View {
                 if recipes.isEmpty {
                     EmptyCookbookView(addRecipe: addRecipe)
                 } else {
-                    CookbookHeader(recipeCount: recipes.count)
-
                     LazyVStack(spacing: 12) {
                         ForEach(recipes) { recipe in
                             Button {
@@ -192,7 +190,7 @@ private struct CookbookSidebar: View {
                         }
                     }
 
-                    Text("Build marker: Detail Scroll Repair v8")
+                    Text("Build marker: Viewport + Header Repair v9")
                         .font(.caption)
                         .foregroundStyle(RecipeTheme.cocoa.opacity(0.65))
                         .frame(maxWidth: .infinity, alignment: .center)
@@ -204,6 +202,7 @@ private struct CookbookSidebar: View {
             .padding(.bottom, 16)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
+        .frame(maxHeight: .infinity)
         .scrollContentBackground(.hidden)
         .background(
             RoundedRectangle(cornerRadius: 30, style: .continuous)
@@ -467,10 +466,10 @@ private struct RecipeDetailScreen: View {
             .frame(maxWidth: 820, alignment: .topLeading)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .scrollContentBackground(.hidden)
         .background(RecipeTheme.cream.opacity(0.54))
         .clipShape(RoundedRectangle(cornerRadius: 34, style: .continuous))
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 
