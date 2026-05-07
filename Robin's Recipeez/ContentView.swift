@@ -13,44 +13,79 @@ struct ContentView: View {
     @State private var isShowingAddRecipe = false
 
     var body: some View {
-        NavigationSplitView {
-            CookbookSidebar(
-                recipes: recipes,
-                selectedRecipe: selectedRecipe,
-                selectRecipe: { selectedRecipe = $0 },
-                deleteRecipe: deleteRecipe,
-                addRecipe: { isShowingAddRecipe = true }
-            )
-            .navigationTitle("Robin’s Recipeez")
-            .navigationSplitViewColumnWidth(min: 340, ideal: 380, max: 430)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        isShowingAddRecipe = true
-                    } label: {
-                        Label("Add Recipe", systemImage: "plus")
-                    }
-                    .tint(RecipeTheme.tomato)
-                }
-            }
-        } detail: {
-            Group {
-                if let selectedRecipe {
-                    RecipeDetailScreen(recipe: selectedRecipe)
-                } else {
-                    PickRecipeView()
-                }
-            }
-        }
-        .navigationSplitViewStyle(.balanced)
-        .background {
+        ZStack {
             ItalianPatternBackground()
                 .ignoresSafeArea()
+
+            NavigationSplitView {
+                CookbookSidebar(
+                    recipes: recipes,
+                    selectedRecipe: selectedRecipe,
+                    selectRecipe: { selectedRecipe = $0 },
+                    deleteRecipe: deleteRecipe,
+                    addRecipe: { isShowingAddRecipe = true }
+                )
+                .navigationSplitViewColumnWidth(min: 340, ideal: 380, max: 430)
+            } detail: {
+                Group {
+                    if let selectedRecipe {
+                        RecipeDetailScreen(recipe: selectedRecipe)
+                    } else {
+                        PickRecipeView()
+                    }
+                }
+            }
+            .navigationSplitViewStyle(.balanced)
+            .background(Color.clear)
         }
-        .toolbarBackground(RecipeTheme.cream.opacity(0.94), for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
         .sheet(isPresented: $isShowingAddRecipe) {
             AddRecipeView()
+        }
+        .onAppear {
+            repairRequestedRecipeDataIfNeeded()
+        }
+    }
+
+    private func repairRequestedRecipeDataIfNeeded() {
+        let lemonGarlicChickenRecipes = recipes
+            .filter { normalizedTitle($0.title) == "lemon garlic chicken" }
+            .sorted { keeperScore(for: $0) > keeperScore(for: $1) }
+
+        var changed = false
+        var keptLemonGarlicChicken: Recipe?
+
+        if let keeper = lemonGarlicChickenRecipes.first {
+            keptLemonGarlicChicken = keeper
+
+            for duplicate in lemonGarlicChickenRecipes.dropFirst() {
+                if selectedRecipe?.persistentModelID == duplicate.persistentModelID {
+                    selectedRecipe = keeper
+                }
+                modelContext.delete(duplicate)
+                changed = true
+            }
+        }
+
+        let hasExistingDemoRecipe = recipes.contains { recipe in
+            let title = normalizedTitle(recipe.title)
+            return title == "lemon garlic chicken" || title == "spaghetti carbonara"
+        }
+        let hasCreamyMushroomRisotto = recipes.contains {
+            normalizedTitle($0.title) == "creamy mushroom risotto"
+        }
+
+        if hasExistingDemoRecipe && !hasCreamyMushroomRisotto {
+            let risotto = Recipe.creamyMushroomRisotto()
+            modelContext.insert(risotto)
+            changed = true
+
+            if selectedRecipe == nil {
+                selectedRecipe = keptLemonGarlicChicken ?? risotto
+            }
+        }
+
+        if changed {
+            try? modelContext.save()
         }
     }
 
@@ -75,9 +110,38 @@ private struct CookbookSidebar: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .center) {
+                        Text("Robin’s Recipeez")
+                            .font(.system(.title2, design: .serif).weight(.bold))
+                            .foregroundStyle(RecipeTheme.ink)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.78)
+
+                        Spacer()
+
+                        Button(action: addRecipe) {
+                            Image(systemName: "plus")
+                                .font(.headline.weight(.bold))
+                                .frame(width: 36, height: 36)
+                                .background(RecipeTheme.tomato)
+                                .foregroundStyle(.white)
+                                .clipShape(Circle())
+                                .shadow(color: RecipeTheme.cocoa.opacity(0.16), radius: 8, x: 0, y: 4)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Add Recipe")
+                    }
+
+                    VineDivider()
+                }
+                .padding(16)
+                .background(RecipeTheme.card.opacity(0.98))
+                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                .shadow(color: RecipeTheme.cocoa.opacity(0.12), radius: 14, x: 0, y: 7)
+
                 if recipes.isEmpty {
                     EmptyCookbookView(addRecipe: addRecipe)
-                        .padding(.top, 12)
                 } else {
                     CookbookHeader(recipeCount: recipes.count)
 
@@ -102,7 +166,7 @@ private struct CookbookSidebar: View {
                         }
                     }
 
-                    Text("Build marker: Safe Area Layout Repair v2")
+                    Text("Build marker: In-Column Add Button v4")
                         .font(.caption)
                         .foregroundStyle(RecipeTheme.cocoa.opacity(0.65))
                         .frame(maxWidth: .infinity, alignment: .center)
@@ -110,14 +174,9 @@ private struct CookbookSidebar: View {
                 }
             }
             .padding(.horizontal, 18)
-            .padding(.vertical, 16)
+            .padding(.top, 18)
+            .padding(.bottom, 16)
             .frame(maxWidth: .infinity, alignment: .topLeading)
-        }
-        .safeAreaInset(edge: .top) {
-            Color.clear.frame(height: 10)
-        }
-        .safeAreaInset(edge: .bottom) {
-            Color.clear.frame(height: 16)
         }
         .scrollContentBackground(.hidden)
         .background(RecipeTheme.cream.opacity(0.72))
@@ -371,20 +430,13 @@ private struct RecipeDetailScreen: View {
                 }
             }
             .padding(.horizontal, 26)
-            .padding(.vertical, 22)
+            .padding(.top, 22)
+            .padding(.bottom, 22)
             .frame(maxWidth: 820, alignment: .topLeading)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
-        .safeAreaInset(edge: .top) {
-            Color.clear.frame(height: 12)
-        }
-        .safeAreaInset(edge: .bottom) {
-            Color.clear.frame(height: 18)
-        }
         .scrollContentBackground(.hidden)
         .background(RecipeTheme.cream.opacity(0.32))
-        .navigationTitle(recipe.title)
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
@@ -482,11 +534,56 @@ private struct NutritionBadge: View {
     }
 }
 
+private func normalizedTitle(_ title: String) -> String {
+    title.trimmingCharacters(in: .whitespacesAndNewlines).localizedLowercase
+}
+
+private func keeperScore(for recipe: Recipe) -> Int {
+    var score = recipe.ingredients.count * 10
+    if !recipe.instructions.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        score += 3
+    }
+    if recipe.nutrition != nil {
+        score += 2
+    }
+    if recipe.caloriesPerServing > 0 {
+        score += 1
+    }
+    return score
+}
+
 private func summaryLine(for recipe: Recipe) -> String {
     let parts = [recipe.cuisine, recipe.proteinType, recipe.carbType]
         .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
         .filter { !$0.isEmpty }
     return parts.isEmpty ? "Homemade favorite" : parts.joined(separator: " • ")
+}
+
+private extension Recipe {
+    static func creamyMushroomRisotto() -> Recipe {
+        Recipe(
+            title: "Creamy Mushroom Risotto",
+            cuisine: "Italian",
+            proteinType: "Vegetarian",
+            carbType: "Arborio rice",
+            caloriesPerServing: 430,
+            isDessert: false,
+            servings: 4,
+            instructions: "Warm the broth in a small pot. Sauté the mushrooms in olive oil until browned, then set them aside. Cook the onion and garlic in butter until soft, stir in the rice, and toast for 1 minute. Add wine if using and simmer until mostly absorbed. Ladle in warm broth a little at a time, stirring often, until the rice is tender and creamy. Fold in mushrooms, parmesan, parsley, and a final pat of butter. Season with salt and pepper before serving.",
+            ingredients: [
+                Ingredient(name: "Arborio rice", amount: 1.5, unit: "cups"),
+                Ingredient(name: "Cremini mushrooms", amount: 12, unit: "oz"),
+                Ingredient(name: "Vegetable broth", amount: 5, unit: "cups"),
+                Ingredient(name: "Yellow onion", amount: 1, unit: "small"),
+                Ingredient(name: "Garlic", amount: 3, unit: "cloves"),
+                Ingredient(name: "Parmesan cheese", amount: 0.75, unit: "cup"),
+                Ingredient(name: "Butter", amount: 3, unit: "tbsp"),
+                Ingredient(name: "Olive oil", amount: 1, unit: "tbsp"),
+                Ingredient(name: "Fresh parsley", amount: 2, unit: "tbsp")
+            ],
+            nutrition: NutritionInfo(calories: 430, protein: 13, carbs: 58, fat: 15)
+        )
+    }
 }
 
 #Preview {
