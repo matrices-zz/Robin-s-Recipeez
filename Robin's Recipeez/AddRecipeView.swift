@@ -27,46 +27,72 @@ struct AddRecipeView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Recipe") {
-                    TextField("Title", text: $title)
-                    TextField("Cuisine", text: $cuisine)
-                    TextField("Protein", text: $proteinType)
-                    TextField("Carb / side", text: $carbType)
-                    Stepper("Servings: \(servings)", value: $servings, in: 1...24)
-                    TextField("Calories per serving", text: $caloriesPerServing)
-                        .keyboardType(.decimalPad)
-                    Toggle("Dessert", isOn: $isDessert)
-                }
+            ZStack {
+                RecipeTheme.backgroundGradient
+                    .ignoresSafeArea()
 
-                Section("Ingredients") {
-                    ForEach($ingredients) { $ingredient in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
                         VStack(alignment: .leading, spacing: 8) {
-                            TextField("Ingredient", text: $ingredient.name)
-                            HStack {
-                                TextField("Amount", text: $ingredient.amount)
-                                    .keyboardType(.decimalPad)
-                                TextField("Unit", text: $ingredient.unit)
+                            Text("New Recipe")
+                                .font(.system(.largeTitle, design: .serif).weight(.bold))
+                                .foregroundStyle(RecipeTheme.ink)
+                            Text("Capture the dish, the details, and the little notes that make it Robin’s.")
+                                .foregroundStyle(RecipeTheme.cocoa)
+                        }
+                        .padding(.horizontal, 4)
+
+                        FormCard(title: "Recipe", icon: "book.closed.fill") {
+                            TextField("Title", text: $title)
+                                .textInputAutocapitalization(.words)
+                            TextField("Cuisine", text: $cuisine)
+                                .textInputAutocapitalization(.words)
+                            TextField("Protein", text: $proteinType)
+                                .textInputAutocapitalization(.words)
+                            TextField("Carb / side", text: $carbType)
+                                .textInputAutocapitalization(.words)
+                            Stepper("Servings: \(servings)", value: $servings, in: 1...24)
+                            TextField("Calories per serving", text: $caloriesPerServing)
+                                .keyboardType(.decimalPad)
+                            Toggle("Dessert", isOn: $isDessert)
+                        }
+
+                        FormCard(title: "Ingredients", icon: "basket.fill") {
+                            ForEach($ingredients) { $ingredient in
+                                VStack(alignment: .leading, spacing: 8) {
+                                    TextField("Ingredient", text: $ingredient.name)
+                                        .textInputAutocapitalization(.words)
+                                    HStack {
+                                        TextField("Amount", text: $ingredient.amount)
+                                            .keyboardType(.decimalPad)
+                                        TextField("Unit", text: $ingredient.unit)
+                                            .textInputAutocapitalization(.never)
+                                    }
+                                }
+                                .padding(12)
+                                .background(RecipeTheme.cream.opacity(0.7))
+                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             }
+
+                            Button {
+                                ingredients.append(IngredientDraft())
+                            } label: {
+                                Label("Add Ingredient", systemImage: "plus.circle.fill")
+                                    .font(.headline)
+                            }
+                            .tint(RecipeTheme.tomato)
+                        }
+
+                        FormCard(title: "Instructions", icon: "text.book.closed.fill") {
+                            TextEditor(text: $instructions)
+                                .frame(minHeight: 170)
+                                .scrollContentBackground(.hidden)
+                                .padding(10)
+                                .background(RecipeTheme.cream.opacity(0.7))
+                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         }
                     }
-                    .onDelete { offsets in
-                        ingredients.remove(atOffsets: offsets)
-                        if ingredients.isEmpty {
-                            ingredients.append(IngredientDraft())
-                        }
-                    }
-
-                    Button {
-                        ingredients.append(IngredientDraft())
-                    } label: {
-                        Label("Add Ingredient", systemImage: "plus.circle")
-                    }
-                }
-
-                Section("Instructions") {
-                    TextEditor(text: $instructions)
-                        .frame(minHeight: 160)
+                    .padding(20)
                 }
             }
             .navigationTitle("Add Recipe")
@@ -76,10 +102,12 @@ struct AddRecipeView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .tint(RecipeTheme.cocoa)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save", action: saveRecipe)
                         .disabled(!canSave)
+                        .tint(RecipeTheme.tomato)
                 }
             }
         }
@@ -119,6 +147,28 @@ struct AddRecipeView: View {
         modelContext.insert(recipe)
         try? modelContext.save()
         dismiss()
+    }
+}
+
+private struct FormCard<Content: View>: View {
+    let title: String
+    let icon: String
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Label(title, systemImage: icon)
+                .font(.title3.bold())
+                .foregroundStyle(RecipeTheme.ink)
+
+            VStack(spacing: 12) {
+                content
+            }
+        }
+        .padding(18)
+        .background(RecipeTheme.card)
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(color: RecipeTheme.cocoa.opacity(0.12), radius: 12, x: 0, y: 6)
     }
 }
 
