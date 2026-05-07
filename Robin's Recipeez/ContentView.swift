@@ -13,42 +13,42 @@ struct ContentView: View {
     @State private var isShowingAddRecipe = false
 
     var body: some View {
-        ZStack {
-            ItalianPatternBackground()
-                .ignoresSafeArea()
-
-            NavigationSplitView {
-                CookbookSidebar(
-                    recipes: recipes,
-                    selectedRecipe: selectedRecipe,
-                    selectRecipe: { selectedRecipe = $0 },
-                    deleteRecipe: deleteRecipe,
-                    addRecipe: { isShowingAddRecipe = true }
-                )
-                .navigationTitle("Robin’s Recipeez")
-                .navigationSplitViewColumnWidth(min: 340, ideal: 380, max: 430)
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button {
-                            isShowingAddRecipe = true
-                        } label: {
-                            Label("Add Recipe", systemImage: "plus")
-                        }
-                        .tint(RecipeTheme.tomato)
+        NavigationSplitView {
+            CookbookSidebar(
+                recipes: recipes,
+                selectedRecipe: selectedRecipe,
+                selectRecipe: { selectedRecipe = $0 },
+                deleteRecipe: deleteRecipe,
+                addRecipe: { isShowingAddRecipe = true }
+            )
+            .navigationTitle("Robin’s Recipeez")
+            .navigationSplitViewColumnWidth(min: 340, ideal: 380, max: 430)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        isShowingAddRecipe = true
+                    } label: {
+                        Label("Add Recipe", systemImage: "plus")
                     }
-                }
-            } detail: {
-                Group {
-                    if let selectedRecipe {
-                        RecipeDetailScreen(recipe: selectedRecipe)
-                    } else {
-                        PickRecipeView()
-                    }
+                    .tint(RecipeTheme.tomato)
                 }
             }
-            .navigationSplitViewStyle(.balanced)
-            .background(Color.clear)
+        } detail: {
+            Group {
+                if let selectedRecipe {
+                    RecipeDetailScreen(recipe: selectedRecipe)
+                } else {
+                    PickRecipeView()
+                }
+            }
         }
+        .navigationSplitViewStyle(.balanced)
+        .background {
+            ItalianPatternBackground()
+                .ignoresSafeArea()
+        }
+        .toolbarBackground(RecipeTheme.cream.opacity(0.94), for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .sheet(isPresented: $isShowingAddRecipe) {
             AddRecipeView()
         }
@@ -102,7 +102,7 @@ private struct CookbookSidebar: View {
                         }
                     }
 
-                    Text("Build marker: Layout Repair v1")
+                    Text("Build marker: Safe Area Layout Repair v2")
                         .font(.caption)
                         .foregroundStyle(RecipeTheme.cocoa.opacity(0.65))
                         .frame(maxWidth: .infinity, alignment: .center)
@@ -113,8 +113,14 @@ private struct CookbookSidebar: View {
             .padding(.vertical, 16)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
+        .safeAreaInset(edge: .top) {
+            Color.clear.frame(height: 10)
+        }
+        .safeAreaInset(edge: .bottom) {
+            Color.clear.frame(height: 16)
+        }
         .scrollContentBackground(.hidden)
-        .background(RecipeTheme.cream.opacity(0.30))
+        .background(RecipeTheme.cream.opacity(0.72))
     }
 }
 
@@ -137,7 +143,8 @@ private struct PickRecipeView: View {
         .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
         .shadow(color: RecipeTheme.cocoa.opacity(0.14), radius: 18, x: 0, y: 8)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.clear)
+        .padding(.top, 18)
+        .background(RecipeTheme.cream.opacity(0.18))
     }
 }
 
@@ -368,8 +375,14 @@ private struct RecipeDetailScreen: View {
             .frame(maxWidth: 820, alignment: .topLeading)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
+        .safeAreaInset(edge: .top) {
+            Color.clear.frame(height: 12)
+        }
+        .safeAreaInset(edge: .bottom) {
+            Color.clear.frame(height: 18)
+        }
         .scrollContentBackground(.hidden)
-        .background(RecipeTheme.cream.opacity(0.20))
+        .background(RecipeTheme.cream.opacity(0.32))
         .navigationTitle(recipe.title)
         .navigationBarTitleDisplayMode(.inline)
     }
