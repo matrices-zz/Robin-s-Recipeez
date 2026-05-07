@@ -13,31 +13,31 @@ struct ContentView: View {
     @State private var isShowingAddRecipe = false
 
     var body: some View {
-        ZStack {
-            ItalianPatternBackground()
-                .ignoresSafeArea()
-
-            NavigationSplitView {
-                CookbookSidebar(
-                    recipes: recipes,
-                    selectedRecipe: selectedRecipe,
-                    selectRecipe: { selectedRecipe = $0 },
-                    deleteRecipe: deleteRecipe,
-                    addRecipe: { isShowingAddRecipe = true }
-                )
-                .navigationSplitViewColumnWidth(min: 340, ideal: 380, max: 430)
-            } detail: {
-                Group {
-                    if let selectedRecipe {
-                        RecipeDetailScreen(recipe: selectedRecipe)
-                    } else {
-                        PickRecipeView()
-                    }
+        NavigationSplitView {
+            CookbookSidebar(
+                recipes: recipes,
+                selectedRecipe: selectedRecipe,
+                selectRecipe: { selectedRecipe = $0 },
+                deleteRecipe: deleteRecipe,
+                addRecipe: { isShowingAddRecipe = true }
+            )
+            .navigationSplitViewColumnWidth(min: 340, ideal: 380, max: 430)
+        } detail: {
+            Group {
+                if let selectedRecipe {
+                    RecipeDetailScreen(recipe: selectedRecipe)
+                } else {
+                    PickRecipeView()
                 }
             }
-            .navigationSplitViewStyle(.balanced)
-            .background(Color.clear)
         }
+        .navigationSplitViewStyle(.balanced)
+        .background {
+            ItalianPatternBackground()
+                .ignoresSafeArea()
+        }
+        .toolbarBackground(RecipeTheme.cream.opacity(0.94), for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .sheet(isPresented: $isShowingAddRecipe) {
             AddRecipeView()
         }
@@ -166,7 +166,7 @@ private struct CookbookSidebar: View {
                         }
                     }
 
-                    Text("Build marker: In-Column Add Button v4")
+                    Text("Build marker: Safe Area + Recipe Repair v5")
                         .font(.caption)
                         .foregroundStyle(RecipeTheme.cocoa.opacity(0.65))
                         .frame(maxWidth: .infinity, alignment: .center)
@@ -177,6 +177,12 @@ private struct CookbookSidebar: View {
             .padding(.top, 18)
             .padding(.bottom, 16)
             .frame(maxWidth: .infinity, alignment: .topLeading)
+        }
+        .safeAreaInset(edge: .top) {
+            Color.clear.frame(height: 10)
+        }
+        .safeAreaInset(edge: .bottom) {
+            Color.clear.frame(height: 16)
         }
         .scrollContentBackground(.hidden)
         .background(RecipeTheme.cream.opacity(0.72))
@@ -435,8 +441,16 @@ private struct RecipeDetailScreen: View {
             .frame(maxWidth: 820, alignment: .topLeading)
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
+        .safeAreaInset(edge: .top) {
+            Color.clear.frame(height: 12)
+        }
+        .safeAreaInset(edge: .bottom) {
+            Color.clear.frame(height: 18)
+        }
         .scrollContentBackground(.hidden)
         .background(RecipeTheme.cream.opacity(0.32))
+        .navigationTitle(recipe.title)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
